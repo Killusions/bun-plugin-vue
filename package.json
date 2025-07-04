@@ -1,6 +1,6 @@
 {
   "name": "@eckidevs/bun-plugin-vue",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "module": "src/index.ts",
   "main": "src/index.ts",
   "type": "module",
@@ -11,5 +11,7 @@
   },
   "peerDependencies": {
     "typescript": "^5"
-  }
+  },
+  "homepage": "https://github.com/Eckhardt-D/bun-plugin-vue#readme",
+  "license": "MIT"
 }

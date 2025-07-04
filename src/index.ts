@@ -8,10 +8,10 @@ interface VuePluginOptions {
 // NOTE: Does not work in Bun's dev server yet, since
 // the dev server does not actually respect config mutation.
 function setVueCompileTimeFlags(build: Bun.PluginBuilder) {
-  const define = build?.config?.define || {};
-  define['__VUE_PROD_DEVTOOLS__'] = 'false';
-  define['__VUE_OPTIONS_API__'] = 'true';
-  define['__VUE_PROD_HYDRATION_MISMATCH_DETAILS__'] = 'false';
+  build.config.define ??= {}
+  build.config.define['__VUE_PROD_DEVTOOLS__'] = 'false';
+  build.config.define['__VUE_OPTIONS_API__'] = 'true';
+  build.config.define['__VUE_PROD_HYDRATION_MISMATCH_DETAILS__'] = 'false';
 }
 
 export default function plugin(options?: VuePluginOptions): BunPlugin {

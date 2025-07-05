@@ -217,7 +217,7 @@ export default function plugin(options?: VuePluginOptions): BunPlugin {
 
         Object.entries(vueFlags).forEach(([key, value]) => {
           const rgx = new RegExp(`${key}`, 'g');
-          source = source.replace(rgx, JSON.parse(value));
+          source = source.replace(rgx, value);
         });
 
         // TODO: These are big strings being cached

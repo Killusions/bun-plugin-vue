@@ -2,27 +2,35 @@ import type { BunPlugin } from 'bun';
 import * as compiler from '@vue/compiler-sfc';
 
 interface VuePluginOptions {
-  // Reserve for future options (like SSR)
+  prodDevTools?: boolean;
+  optionsApi?: boolean;
+  prodHydrationMismatchDetails?: boolean;
 }
 
 // NOTE: Does not work in Bun's dev server yet, since
 // the dev server does not actually respect config mutation.
-function setVueCompileTimeFlags(build: Bun.PluginBuilder) {
+function setVueCompileTimeFlags(build: Bun.PluginBuilder, options: VuePluginOptions) {
   build.config.define ??= {}
-  build.config.define['__VUE_PROD_DEVTOOLS__'] = 'false';
-  build.config.define['__VUE_OPTIONS_API__'] = 'true';
-  build.config.define['__VUE_PROD_HYDRATION_MISMATCH_DETAILS__'] = 'false';
+  build.config.define['__VUE_PROD_DEVTOOLS__'] = options.prodDevTools === false ? 'false' : 'true';
+  build.config.define['__VUE_OPTIONS_API__'] = options.optionsApi === false ? 'false' : 'true';
+  build.config.define['__VUE_PROD_HYDRATION_MISMATCH_DETAILS__'] = options.prodHydrationMismatchDetails === false ? 'false' : 'true';
 }
 
 export default function plugin(options?: VuePluginOptions): BunPlugin {
-  // TODO: more options
-  if (options) {};
+  const opts = options || {};
+
+  // Set default options
+  Object.assign(opts, {
+    prodDevTools: opts.prodDevTools ?? false,
+    optionsApi: opts.optionsApi ?? false,
+    prodHydrationMismatchDetails: opts.prodHydrationMismatchDetails ?? false,
+  })
 
   return {
     name: 'vue',
     setup(build) {
       if (Bun.env.NODE_ENV !== 'production') {
-        setVueCompileTimeFlags(build);
+        setVueCompileTimeFlags(build, opts);
       }
 
       build.onResolve({ filter: /\.vue/ }, (args) => {
@@ -183,6 +191,44 @@ export default function plugin(options?: VuePluginOptions): BunPlugin {
           loader: 'js',
         }
       });
+
+      const replacedMap = new Map<string, string>();
+
+      build.onLoad({ filter: /node_modules\/@vue\/(.*)\.js$/ }, async (args) => {
+        const file = Bun.file(args.path);
+        let source = await file.text();
+
+        const replaced = replacedMap.get(args.path);
+
+        if (replaced) {
+          return {
+            contents: replaced,
+            loader: 'js',
+          }
+        }
+
+        // Replace Vue Feature Flags
+        // This is a workaround for Bun's lack of support for define in dev
+        const vueFlags = {
+          '__VUE_PROD_DEVTOOLS__': opts.prodDevTools ? 'true' : 'false',
+          '__VUE_OPTIONS_API__': opts.optionsApi ? 'true' : 'false',
+          '__VUE_PROD_HYDRATION_MISMATCH_DETAILS__': opts.prodHydrationMismatchDetails ? 'true' : 'false',
+        };
+
+        Object.entries(vueFlags).forEach(([key, value]) => {
+          const rgx = new RegExp(`${key}`, 'g');
+          source = source.replace(rgx, JSON.parse(value));
+        });
+
+        // TODO: These are big strings being cached
+        // We should consider a more efficient caching strategy
+        replacedMap.set(args.path, source);
+
+        return {
+          contents: source,
+          loader: 'js',
+        }
+      })
     }
   }
 }

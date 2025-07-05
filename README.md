@@ -64,24 +64,49 @@ Then update `bunfig.toml`
 plugins = ["./vue-plugin.ts"]
 ```
 
-## Known Issues
+## Plugin Options
 
-You might encouter the following console message in the browser (in development):
+The plugin has optional settings that you can pass:
 
-- `Feature flags __VUE_OPTIONS_API__, __VUE_PROD_DEVTOOLS__, __VUE_PROD_HYDRATION_MISMATCH_DETAILS__`
-
-This is because the `define` option in bun's config is not yet supported in the dev server. You could suppress it by adding in your HTML:
-
-```html
-<script>
-globalThis.__VUE_OPTIONS_API__ = true;
-globalThis.__VUE_PROD_DEVTOOLS__ = false;
-globalThis.__VUE_PROD_HYDRATION_MISMATCH_DETAILS__ = false;
-</script>
+```ts
+interface VuePluginOptions {
+  prodDevTools?: boolean; // Default = false
+  optionsApi?: boolean; // Default = false
+  prodHydrationMismatchDetails?: boolean; // Default = false
+}
 ```
 
-That is not the correct fix though, it needs to be replaced in the code at compile time.
-This will be fixed in a future version of Bun.
+- `prodDevTools`: If set to `true`, it will enable Vue DevTools in production mode. This is useful for debugging but may expose sensitive information, so use with caution.
+- `optionsApi`: If set to `true`, it will enable the Options API in Vue. This is useful if you want to use the Options API instead of the Composition API.
+- `prodHydrationMismatchDetails`: If set to `true`, it will provide detailed error messages for hydration mismatches in production mode. This is useful for debugging hydration issues but may expose sensitive information, so use with caution.
+
+
+## Known Issues
+
+
+### Hot Reloading Error Logs
+
+Because bun implements hot reloading in the Full-Stack Dev Server to eliminate
+HMR error logs, add the following to the main.ts where your vue app is created:
+
+```ts
+import { createApp } from 'vue';
+import App from './App.vue';
+
+const app = createApp(App);
+
+// The important part for HMR
+if (import.meta.hot) {
+  import.meta.hot.on('bun:invalidate', () => {
+    app.unmount();
+  })
+  import.meta.hot.accept()
+}
+
+app.mount('#app');
+```
+
+This HMR code will be dead-code eliminated during production.
 
 
 

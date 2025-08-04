@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "@eckidevs/bun-plugin-vue",
+      "name": "@killusions/bun-plugin-vue",
       "devDependencies": {
         "@types/bun": "latest",
         "@vue/compiler-sfc": "^3.5.17",

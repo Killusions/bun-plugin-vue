@@ -15,7 +15,7 @@ A simple Vue plugin for [Bun](https://bun.sh) build, dev server etc. Made to be 
 ## Installation
 
 ```bash
-bun add -D @eckidevs/bun-plugin-vue
+bun add -D @killusions/bun-plugin-vue
 ```
 
 ### Typing Vue
@@ -38,7 +38,7 @@ The following is a quickstart, but see the `examples` directory for full example
 ### In Bun Build
 
 ```ts
-import vuePlugin from '@eckidevs/bun-plugin-vue'
+import vuePlugin from '@killusions/bun-plugin-vue'
 
 Bun.build({
   // index.html Imports main.ts where App.vue is setup
@@ -54,7 +54,7 @@ First create the local plugin file:
 
 ```ts
 // vue-plugin.ts
-import vuePlugin from '@eckidevs/bun-plugin-vue'
+import vuePlugin from '@killusions/bun-plugin-vue'
 export default vuePlugin()
 ```
 
@@ -108,6 +108,3 @@ app.mount('#app');
 ```
 
 This HMR code will be dead-code eliminated during production.
-
-
-

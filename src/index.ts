@@ -160,12 +160,23 @@ export default function plugin(options?: VuePluginOptions): BunPlugin {
         idMap.set(args.path, id);
 
         if (descriptor.script || descriptor.scriptSetup) {
+          const logError = <T>(message: string, value: T): T => {
+            console.error(`[vue-plugin:error] ${message}`);
+            return value;
+          };
           const script = compiler.compileScript(descriptor, {
             id,
             // Provide fs access for type imports in script compilation
             fs: {
               fileExists: fs.existsSync,
-              readFile: (file: string) => fs.readFileSync(file, 'utf-8'),
+              // Prevent error: EISDIR: illegal operation on a directory, read
+              readFile: (file: string) => {
+                if (fs.lstatSync(file).isDirectory()) {
+                  return fs.existsSync(file + '/index.ts') ? fs.readFileSync(file + '/index.ts', 'utf-8') : fs.existsSync(file + '/index.d.ts') ? fs.readFileSync(file + '/index.d.ts', 'utf-8') : logError<string>('Could not resolve directory', '')
+                } else {
+                  return fs.readFileSync(file, 'utf-8');
+                }
+              },
             }
           });
           scriptMap.set(args.path, script);
